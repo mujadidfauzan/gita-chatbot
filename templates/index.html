@@ -1,0 +1,878 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Chatbot GITA</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+    <style>
+      body {
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        margin: 0;
+        padding: 0;
+        background: #f5f5f5;
+        height: 100vh;
+      }
+
+      /* Floating button style */
+      .chat-button {
+        position: fixed;
+        bottom: 30px;
+        right: 30px;
+        width: 60px;
+        height: 60px;
+        background: #1e7a9f;
+        border-radius: 50%;
+        box-shadow: 0 4px 15px rgba(0, 123, 255, 0.4);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        color: white;
+        font-size: 24px;
+        cursor: pointer;
+        transition: all 0.3s;
+        z-index: 1000;
+      }
+
+      .chat-button:hover {
+        transform: scale(1.05);
+        box-shadow: 0 5px 20px rgba(0, 123, 255, 0.5);
+      }
+
+      /* Chat container */
+      .chat-container {
+        position: fixed;
+        bottom: 100px;
+        right: 30px;
+        width: 350px;
+        height: 500px;
+        background: #fff;
+        border-radius: 15px;
+        box-shadow: 0 5px 25px rgba(0, 0, 0, 0.15);
+        display: none;
+        flex-direction: column;
+        overflow: hidden;
+        z-index: 999;
+        transition: all 0.3s;
+      }
+
+      .chat-header {
+        background: linear-gradient(135deg, #27a0cf, #00b7ff);
+        color: #fff;
+        padding: 15px 20px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      .chat-title {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-weight: 600;
+      }
+
+      .chat-title i {
+        font-size: 20px;
+      }
+
+      .close-chat {
+        background: transparent;
+        border: none;
+        color: white;
+        font-size: 18px;
+        cursor: pointer;
+        transition: transform 0.2s;
+      }
+
+      .close-chat:hover {
+        transform: scale(1.2);
+      }
+
+      #messages {
+        flex: 1;
+        overflow-y: auto;
+        padding: 15px;
+        background: #f8f9fa;
+      }
+
+      .message {
+        margin: 8px 0;
+        padding: 10px 15px;
+        border-radius: 18px;
+        max-width: 80%;
+        position: relative;
+        animation: fadeIn 0.3s;
+        word-wrap: break-word;
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+      }
+
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+          transform: translateY(10px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      .userMsg {
+        float: right;
+        background: linear-gradient(135deg, #27a0cf, #00b7ff);
+        color: #fff;
+        border-bottom-right-radius: 5px;
+      }
+
+      .botMsg {
+        float: left;
+        background: #fff;
+        color: #333;
+        border-bottom-left-radius: 5px;
+      }
+
+      .botMsg ul {
+        padding-left: 20px;
+        margin: 5px 0;
+      }
+
+      .botMsg h4 {
+        margin-top: 0;
+        margin-bottom: 8px;
+      }
+
+      .clear {
+        clear: both;
+      }
+
+      .input-area {
+        display: flex;
+        padding: 12px;
+        background: #fff;
+        border-top: 1px solid #e9ecef;
+      }
+
+      #userInput {
+        flex: 1;
+        padding: 12px;
+        border: 1px solid #e2e8f0;
+        border-radius: 25px;
+        font-size: 14px;
+        transition: border 0.3s;
+      }
+
+      #userInput:focus {
+        outline: none;
+        border-color: #1e7a9f;
+      }
+
+      .input-area button {
+        width: 40px;
+        height: 40px;
+        border: none;
+        background: #1e7a9f;
+        color: #fff;
+        border-radius: 50%;
+        margin-left: 10px;
+        cursor: pointer;
+        transition: background 0.3s;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      }
+
+      .input-area button:hover {
+        background: #003b52;
+      }
+
+      .input-area button i {
+        font-size: 16px;
+      }
+
+      /* Form styling */
+      .form-container {
+        padding: 15px;
+      }
+
+      .form-input {
+        width: 100%;
+        padding: 12px;
+        margin-bottom: 12px;
+        border: 1px solid #e2e8f0;
+        border-radius: 5px;
+        font-size: 14px;
+        transition: border 0.3s;
+      }
+
+      .form-input:focus {
+        outline: none;
+        border-color: #1e7a9f;
+      }
+
+      .form-button {
+        background: #1e7a9f;
+        color: white;
+        border: none;
+        padding: 12px 20px;
+        border-radius: 5px;
+        width: 100%;
+        cursor: pointer;
+        font-weight: 600;
+        transition: background 0.3s;
+      }
+
+      .form-button:hover {
+        background: #00597c;
+      }
+
+      /* Typing indicator */
+      .typing {
+        display: flex;
+        align-items: center;
+        margin-bottom: 15px;
+        margin-left: 5px;
+      }
+
+      .typing-indicator {
+        display: flex;
+        padding: 12px 15px;
+        background: #e9ecef;
+        border-radius: 18px;
+        border-bottom-left-radius: 5px;
+      }
+
+      .typing-dot {
+        width: 8px;
+        height: 8px;
+        margin: 0 2px;
+        background-color: #999;
+        border-radius: 50%;
+        opacity: 0.4;
+        animation: typing 1.5s infinite;
+      }
+
+      .typing-dot:nth-child(1) {
+        animation-delay: 0s;
+      }
+      .typing-dot:nth-child(2) {
+        animation-delay: 0.5s;
+      }
+      .typing-dot:nth-child(3) {
+        animation-delay: 1s;
+      }
+
+      @keyframes typing {
+        0% {
+          opacity: 0.4;
+          transform: scale(1);
+        }
+        50% {
+          opacity: 1;
+          transform: scale(1.2);
+        }
+        100% {
+          opacity: 0.4;
+          transform: scale(1);
+        }
+      }
+
+      /* End chat button */
+      .end-chat {
+        text-align: center;
+        padding: 10px;
+        border-top: 1px solid #e9ecef;
+      }
+
+      .end-chat button {
+        background: transparent;
+        border: none;
+        color: #6c757d;
+        cursor: pointer;
+        font-size: 14px;
+        transition: color 0.3s;
+      }
+
+      .end-chat button:hover {
+        color: #dc3545;
+      }
+    </style>
+  </head>
+
+  <body>
+    <!-- Floating Chat Button -->
+    <div class="chat-button" id="chatButton">
+      <i class="fas fa-comment"></i>
+    </div>
+
+    <!-- Chat Container -->
+    <div class="chat-container" id="chatContainer">
+      <div class="chat-header">
+        <div class="chat-title">
+          <i class="fas fa-robot"></i>
+          <span>Chat with GITA</span>
+        </div>
+        <button class="close-chat" id="closeChat">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      <div id="messages"></div>
+      <div class="input-area">
+        <input type="text" id="userInput" placeholder="Type your message..." disabled />
+        <button onclick="sendMessage()" id="sendBtn" disabled>
+          <i class="fas fa-paper-plane"></i>
+        </button>
+      </div>
+      <div class="end-chat">
+        <button onclick="endChat()">End Chat</button>
+      </div>
+    </div>
+
+    <script>
+      let email = '';
+      let phone = '';
+      let chatOpen = false;
+      let conversationData = [];
+
+      // Initialize chat button
+      document.getElementById('chatButton').addEventListener('click', toggleChat);
+      document.getElementById('closeChat').addEventListener('click', toggleChat);
+
+      function toggleChat() {
+        const chatContainer = document.getElementById('chatContainer');
+        const chatButton = document.getElementById('chatButton');
+
+        if (chatOpen) {
+          chatContainer.style.display = 'none';
+          chatButton.innerHTML = '<i class="fas fa-comment"></i>';
+        } else {
+          chatContainer.style.display = 'flex';
+          chatButton.innerHTML = '<i class="fas fa-times"></i>';
+
+          // If first time opening and messages is empty, show form
+          if (document.getElementById('messages').children.length === 0) {
+            showBotBubbleForm();
+          }
+        }
+
+        chatOpen = !chatOpen;
+      }
+
+      // Listen for Enter key in input field
+      document.getElementById('userInput').addEventListener('keypress', function (e) {
+        if (e.key === 'Enter') {
+          sendMessage();
+        }
+      });
+
+      function showBotBubbleForm() {
+        const messagesDiv = document.getElementById('messages');
+
+        // Initial welcome message
+        const welcomeBubble = document.createElement('div');
+        welcomeBubble.className = 'message botMsg';
+        welcomeBubble.innerHTML = `
+          <p>👋 Halo! Selamat datang di layanan chat GITA.</p>
+          <p>Silakan masukkan email & nomor telepon Anda untuk memulai:</p>
+        `;
+        messagesDiv.appendChild(welcomeBubble);
+        messagesDiv.appendChild(document.createElement('div')).className = 'clear';
+
+        // Form bubble
+        const formBubble = document.createElement('div');
+        formBubble.className = 'message botMsg';
+        formBubble.innerHTML = `
+          <form onsubmit="sendEmailPhone(event)" class="form-container">
+            <input type="email" id="emailInput" placeholder="Email" class="form-input" required />
+            <input type="tel" id="phoneInput" placeholder="No Telepon" class="form-input" required />
+            <button type="submit" class="form-button">Mulai Chat</button>
+          </form>
+        `;
+        messagesDiv.appendChild(formBubble);
+        messagesDiv.appendChild(document.createElement('div')).className = 'clear';
+
+        scrollToBottom();
+      }
+
+      async function sendEmailPhone(event) {
+        event.preventDefault();
+
+        const emailInput = document.getElementById('emailInput').value.trim();
+        const phoneInput = document.getElementById('phoneInput').value.trim();
+
+        if (!emailInput || !phoneInput) {
+          alert('Mohon isi email & telepon!');
+          return;
+        }
+
+        email = email;
+        email = emailInput;
+        phone = phoneInput;
+
+        // Create user message showing their info
+        addUserMessage(`Email: ${email}\nTelepon: ${phone}`);
+
+        // Remove form bubble
+        event.target.closest('.botMsg').remove();
+
+        // Show typing indicator
+        const typingIndicator = showTypingIndicator();
+
+        // Send to /start endpoint
+        const formData = new FormData();
+        formData.append('email', email);
+        formData.append('phone', phone);
+
+        try {
+          const res = await fetch('/start', {
+            method: 'POST',
+            body: formData,
+          });
+
+          const data = await res.json();
+          console.log(data);
+
+          // Remove typing indicator
+          typingIndicator.remove();
+
+          // Add welcome message
+          addBotMessage('Data diterima. Apa yang ingin Anda tanyakan?');
+
+          // Store this in conversation data
+          storeConversation('system', 'Chat dimulai');
+          storeConversation('user', `Email: ${email}, Phone: ${phone}`);
+          storeConversation('assistant', 'Data diterima. Apa yang ingin Anda tanyakan?');
+
+          // Enable input
+          document.getElementById('userInput').disabled = false;
+          document.getElementById('sendBtn').disabled = false;
+          document.getElementById('userInput').focus();
+
+          resetInactivityTimer();
+        } catch (error) {
+          console.error('Error:', error);
+          typingIndicator.remove();
+          addBotMessage('Maaf, terjadi kesalahan. Silakan coba lagi.');
+        }
+      }
+
+      function addUserMessage(text) {
+        const messagesDiv = document.getElementById('messages');
+        const msgContainer = document.createElement('div');
+        msgContainer.className = 'message userMsg';
+
+        // Convert line breaks to <br>
+        msgContainer.innerHTML = text.replace(/\n/g, '<br>');
+
+        messagesDiv.appendChild(msgContainer);
+        messagesDiv.appendChild(document.createElement('div')).className = 'clear';
+        scrollToBottom();
+      }
+
+      function addBotMessage(text) {
+        const messagesDiv = document.getElementById('messages');
+        const msgContainer = document.createElement('div');
+        msgContainer.className = 'message botMsg';
+
+        // Convert line breaks to <br>
+        msgContainer.innerHTML = text.replace(/\n/g, '<br>');
+
+        messagesDiv.appendChild(msgContainer);
+        messagesDiv.appendChild(document.createElement('div')).className = 'clear';
+        scrollToBottom();
+      }
+
+      function addBotMessageFromJson(jsonData) {
+        const messagesDiv = document.getElementById('messages');
+        const msgContainer = document.createElement('div');
+        msgContainer.className = 'message botMsg';
+
+        let html = '';
+        if (jsonData.title) {
+          html += '<h4>' + jsonData.title + '</h4>';
+        }
+        if (jsonData.paragraphs) {
+          jsonData.paragraphs.forEach((p) => {
+            html += `<p>${p}</p>`;
+          });
+        }
+        if (jsonData.bullets) {
+          html += '<ul>';
+          jsonData.bullets.forEach((b) => {
+            html += '<li>' + b + '</li>';
+          });
+          html += '</ul>';
+        }
+        if (jsonData.info_lain) {
+          html += `<p>${jsonData.info_lain}</p>`;
+        }
+
+        // THIS IS MISSING! Setting the HTML content
+        msgContainer.innerHTML = html;
+
+        messagesDiv.appendChild(msgContainer);
+        messagesDiv.appendChild(document.createElement('div')).className = 'clear';
+        scrollToBottom();
+
+        // Store bot message in conversation data
+        storeConversation('assistant', html);
+
+        return msgContainer;
+      }
+
+      function showTypingIndicator() {
+        const messagesDiv = document.getElementById('messages');
+        const typingDiv = document.createElement('div');
+        typingDiv.className = 'typing';
+        typingDiv.innerHTML = `
+          <div class="typing-indicator">
+            <div class="typing-dot"></div>
+            <div class="typing-dot"></div>
+            <div class="typing-dot"></div>
+          </div>
+        `;
+        messagesDiv.appendChild(typingDiv);
+        messagesDiv.appendChild(document.createElement('div')).className = 'clear';
+        scrollToBottom();
+        return typingDiv;
+      }
+
+      function scrollToBottom() {
+        const messagesDiv = document.getElementById('messages');
+        messagesDiv.scrollTop = messagesDiv.scrollHeight;
+      }
+
+      // Store conversation data for transcript
+      function storeConversation(role, content) {
+        const timestamp = new Date().toISOString();
+        conversationData.push({
+          timestamp,
+          role,
+          content,
+        });
+      }
+
+      // Update your sendMessage function
+      async function sendMessage() {
+        const userInputEl = document.getElementById('userInput');
+        const userQuery = userInputEl.value.trim();
+        if (!userQuery) return;
+
+        // Disable input while we wait
+        userInputEl.disabled = true;
+        document.getElementById('sendBtn').disabled = true;
+
+        // Show user message in chat
+        addUserMessage(userQuery);
+        userInputEl.value = '';
+
+        // Store user message
+        storeConversation('user', userQuery);
+
+        // Show typing indicator
+        const typingIndicator = showTypingIndicator();
+
+        try {
+          // Make a normal POST request
+          const response = await fetch('/ask', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ query: userQuery, email: email }),
+          });
+
+          typingIndicator.remove();
+
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+          }
+
+          // Parse the JSON response
+          const jsonData = await response.json();
+
+          // Simulate streaming with the complete response
+          await simulateJsonStreaming(jsonData);
+        } catch (error) {
+          console.error('Error:', error);
+          typingIndicator.remove();
+          addBotMessage('Maaf, terjadi kesalahan. Silakan coba lagi.');
+          storeConversation('assistant', 'Maaf, terjadi kesalahan. Silakan coba lagi.');
+        }
+
+        // Re-enable input
+        userInputEl.disabled = false;
+        document.getElementById('sendBtn').disabled = false;
+        userInputEl.focus();
+        resetInactivityTimer();
+      }
+
+      // New function to simulate streaming for JSON response
+      async function simulateJsonStreaming(jsonData) {
+        // Create an empty message container
+        const messagesDiv = document.getElementById('messages');
+        const msgContainer = document.createElement('div');
+        msgContainer.className = 'message botMsg';
+        messagesDiv.appendChild(msgContainer);
+        messagesDiv.appendChild(document.createElement('div')).className = 'clear';
+
+        // Initialize HTML string
+        let html = '';
+
+        // Function to update container and scroll
+        function updateContainer(newHtml) {
+          msgContainer.innerHTML = newHtml;
+          scrollToBottom();
+        }
+
+        // Simulate delay between elements (ms)
+        const delay = 500;
+
+        // Add title with animation
+        if (jsonData.title) {
+          await new Promise((resolve) => setTimeout(resolve, delay));
+          html += '<h4>' + jsonData.title + '</h4>';
+          updateContainer(html);
+        }
+
+        // Add paragraphs one by one
+        if (jsonData.paragraphs && jsonData.paragraphs.length > 0) {
+          for (const paragraph of jsonData.paragraphs) {
+            await new Promise((resolve) => setTimeout(resolve, delay));
+            html += `<p>${paragraph}</p>`;
+            updateContainer(html);
+          }
+        }
+
+        // Add bullet points with animation
+        if (jsonData.bullets && jsonData.bullets.length > 0) {
+          html += '<ul>';
+          updateContainer(html);
+
+          for (const bullet of jsonData.bullets) {
+            await new Promise((resolve) => setTimeout(resolve, delay / 2));
+            html += `<li>${bullet}</li>`;
+            updateContainer(html);
+          }
+
+          html += '</ul>';
+          updateContainer(html);
+        }
+
+        // Add additional info
+        if (jsonData.info_lain) {
+          await new Promise((resolve) => setTimeout(resolve, delay));
+          html += `${jsonData.info_lain}</p>`;
+          updateContainer(html);
+        }
+
+        // Store bot message in conversation data once complete
+        storeConversation('assistant', html);
+      }
+
+      function addStreamingBotMessageContainer() {
+        const messagesDiv = document.getElementById('messages');
+        const msgContainer = document.createElement('div');
+        msgContainer.className = 'message botMsg';
+        messagesDiv.appendChild(msgContainer);
+        messagesDiv.appendChild(document.createElement('div')).className = 'clear';
+        return msgContainer;
+      }
+
+      function updateStreamingBotMessage(container, jsonData) {
+        let html = '';
+        if (jsonData.title) {
+          html += '<h4>' + jsonData.title + '</h4>';
+        }
+        if (jsonData.paragraphs) {
+          jsonData.paragraphs.forEach((p) => {
+            html += `<p>${p}</p>`;
+          });
+        }
+        if (jsonData.bullets) {
+          html += '<ul>';
+          jsonData.bullets.forEach((b) => {
+            html += '<li>' + b + '</li>';
+          });
+          html += '</ul>';
+        }
+        if (jsonData.info_lain) {
+          html += `${jsonData.info_lain}</p>`;
+        }
+
+        container.innerHTML = html;
+        scrollToBottom();
+
+        // Store complete bot message in conversation data
+        storeConversation('assistant', html);
+      }
+
+      // function confirmEndChat() {
+      //   if (confirm('Anda yakin ingin mengakhiri percakapan ini?')) {
+      //     endChat();
+      //   }
+      // }
+
+      // Replace your existing endChat function with this version
+      async function endChat() {
+        try {
+          // Check if email exists to prevent errors when clicking end chat right after page load
+          if (!email) {
+            toggleChat();
+            return;
+          }
+
+          // Set flag to prevent duplicate sending on page close
+          window.transcriptSent = true;
+
+          // Add a loading message before sending the request
+          const loadingMsg = document.createElement('div');
+          loadingMsg.className = 'message botMsg';
+          loadingMsg.innerHTML = `
+      <div style="display: flex; justify-content: center; align-items: center; padding: 10px;">
+        <div style="text-align: center;">
+          <div class="typing-indicator">
+            <div class="typing-dot"></div>
+            <div class="typing-dot"></div>
+            <div class="typing-dot"></div>
+          </div>
+        </div>
+      </div>
+    `;
+          document.getElementById('messages').appendChild(loadingMsg);
+          document.getElementById('messages').appendChild(document.createElement('div')).className = 'clear';
+          scrollToBottom();
+
+          // Disable buttons during processing
+          document.querySelector('.end-chat button').disabled = true;
+          document.getElementById('userInput').disabled = true;
+          document.getElementById('sendBtn').disabled = true;
+
+          const response = await fetch('/finish', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              email: email,
+              phone: phone,
+              conversation: conversationData,
+            }),
+          });
+
+          const data = await response.json();
+
+          // Remove the loading message
+          loadingMsg.remove();
+
+          // Show completion message
+          addBotMessage('Thank you for chatting with GITA!');
+
+          // Reset chat after a short delay
+          setTimeout(() => {
+            // Reset chat
+            email = '';
+            phone = '';
+            conversationData = [];
+            document.getElementById('messages').innerHTML = '';
+            document.getElementById('userInput').disabled = true;
+            document.getElementById('sendBtn').disabled = true;
+
+            // Re-enable the end chat button
+            document.querySelector('.end-chat button').disabled = false;
+
+            // Close chat window
+            toggleChat();
+
+            // Reset inactivity timer
+            clearTimeout(inactivityTimer);
+          }, 3000);
+        } catch (error) {
+          console.error('Error ending chat:', error);
+          addBotMessage('Terjadi kesalahan saat mengirim transkrip.');
+          document.querySelector('.end-chat button').disabled = false;
+          document.getElementById('userInput').disabled = false;
+          document.getElementById('sendBtn').disabled = false;
+        }
+      }
+
+      // Replace your existing toggleChat function with this version
+      function toggleChat() {
+        const chatContainer = document.getElementById('chatContainer');
+        const chatButton = document.getElementById('chatButton');
+
+        if (chatOpen) {
+          chatContainer.style.display = 'none';
+          chatButton.innerHTML = '<i class="fas fa-comment"></i>';
+        } else {
+          chatContainer.style.display = 'flex';
+          chatButton.innerHTML = '<i class="fas fa-times"></i>';
+
+          // If first time opening or after end chat, messages is empty, show form
+          if (document.getElementById('messages').children.length === 0) {
+            showBotBubbleForm();
+
+            // Ensure the end chat button has its event listener
+            document.querySelector('.end-chat button').onclick = endChat;
+          }
+        }
+
+        chatOpen = !chatOpen;
+      }
+
+      // This ensures the end chat button is initialized on page load
+      document.addEventListener('DOMContentLoaded', function () {
+        document.querySelector('.end-chat button').onclick = endChat;
+      });
+
+      let inactivityTimer;
+      const INACTIVITY_TIMEOUT = 15 * 60 * 1000; // 15 minutes in milliseconds
+
+      function resetInactivityTimer() {
+        // Clear the existing timer
+        clearTimeout(inactivityTimer);
+
+        // Set new timer
+        inactivityTimer = setTimeout(() => {
+          // Only end chat if there was at least one message exchanged
+          if (conversationData.length > 3 && email) {
+            addBotMessage('Your session has timed out due to inactivity');
+            endChat();
+          }
+        }, INACTIVITY_TIMEOUT);
+      }
+
+      // Reset inactivity timer when chat opens
+      document.getElementById('chatButton').addEventListener('click', function () {
+        if (!chatOpen) resetInactivityTimer();
+      });
+
+      // Reset timer on user input
+      document.getElementById('userInput').addEventListener('keypress', resetInactivityTimer);
+      document.getElementById('sendBtn').addEventListener('click', resetInactivityTimer);
+
+      // Send when user reload page
+      window.addEventListener('beforeunload', async function (e) {
+        // Only attempt to send transcript if there's an active session with messages
+        if (email && conversationData.length > 3) {
+          // Create a flag to track if we've already sent the transcript
+          if (!window.transcriptSent) {
+            // Use sendBeacon for reliable background sending before page unload
+            // This is more reliable than fetch during page close events
+            const transcriptData = JSON.stringify({
+              email: email,
+              phone: phone,
+              conversation: conversationData,
+            });
+
+            navigator.sendBeacon(
+              '/finish',
+              new Blob([transcriptData], {
+                type: 'application/json',
+              })
+            );
+
+            // Mark transcript as sent to avoid duplicate sends
+            window.transcriptSent = true;
+          }
+        }
+      });
+    </script>
+  </body>
+</html>

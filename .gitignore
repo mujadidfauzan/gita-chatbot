@@ -1,0 +1,39 @@
+# Direktori dan file sistem
+.DS_Store
+Thumbs.db
+
+# File log dan cache
+*.log
+*.cache
+*.tmp
+
+# Direktori dependensi
+node_modules/
+venv/
+__pycache__/
+
+# File konfigurasi lingkungan
+.env
+.env.local
+
+# File build dan output
+/dist/
+/build/
+/out/
+*.exe
+*.dll
+*.so
+*.dylib
+
+# File database dan data sementara
+*.sqlite
+*.db
+*.csv
+*.tsv
+
+# Editor dan IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*.bak
